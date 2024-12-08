@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home B</title>
+</head>
+<body>
+    <h1>Welcome to Version B</h1>
+    <button onclick="trackInteraction('B', 'Button1')">Click Me!</button>
+    <script>
+        function trackInteraction(version, buttonId) {
+            fetch('/test/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ version, buttonId, timestamp: new Date().toISOString() })
+            });
+        }
+    </script>
+</body>
+</html>
