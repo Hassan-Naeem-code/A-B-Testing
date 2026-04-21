@@ -1,43 +1,68 @@
-# A/B Testing Web Application
+# A/B Testing Server
 
-## Description
-This project is a simple single-page web application (SPA) that implements A/B testing. The app consists of the following:
+A minimal Node.js + Express server demonstrating how to run an A/B test using sticky cookie-based variant assignment. Zero external services — the whole experiment fits in a single repo.
 
-- A static introductory page that links to a login page.
-- Two versions of a home page ("A" and "B") displayed to the user after login.
-- A mechanism for randomly directing users to either version "A" or "B" of the home page.
-- A method to track user interactions (button clicks) and capture metrics such as IP address and timestamp.
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)
 
-## Prerequisites
-- Basic knowledge of web development (HTML, CSS, JavaScript)
-- Basic understanding of A/B testing
-- A working development environment for (Node.js, npm, etc.)
+## What it demonstrates
 
-## Installation Instructions
-1. Clone the repository:
-   git clone https://github.com/Hassan-Naeem-code/A-B-Testing
+- Assign each visitor to a variant (`A` or `B`) on their first request
+- Persist the assignment in a cookie so the same visitor always sees the same variant
+- Serve different content per variant from `/abTesting` routes
+- Keep the experiment logic server-side (no flash of wrong content)
 
-2. Navigate to the project directory:
-   cd A-B-Testing
+It's a useful starter before you adopt a heavier tool like GrowthBook, LaunchDarkly, or Optimizely — good for reading the essentials end-to-end.
 
-3. Install dependencies:
-   npm install or yarn install   
+## Quick start
 
-## Usage Instructions
+```bash
+git clone https://github.com/Hassan-Naeem-code/A-B-Testing.git
+cd A-B-Testing
 
-1. Run the app locally:
-   npm start server.js
+npm install
+node server.js
+```
 
-4. Open the application in your browser at http://localhost:3000.
+Visit http://localhost:3000/abTesting — open it in an incognito window a few times to see variant assignment in action.
 
-## Available Scripts
+## How it works
 
-In the project directory, you can run:
+```
+GET /abTesting
+    │
+    ├── Has variant cookie?
+    │      ├── Yes → serve the cached variant
+    │      └── No  → hash user/session, assign A or B, set cookie, serve
+    │
+    └── Log exposure for analysis
+```
 
-### `npm start`
+Deterministic hashing of a user-stable identifier + experiment key means:
+- The same user always sees the same variant
+- SSR and client render agree
+- You can add more variants (multivariate) without restructuring
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Project layout
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+.
+├── server.js              # Express app entry
+├── routes/
+│   └── abTesting.js       # variant assignment + serving
+├── public/                # static files served to all users
+└── package.json
+```
+
+## Extending it
+
+- **Log exposures** to a real analytics sink (Segment, PostHog, warehouse)
+- **Multivariate** — allow `A/B/C/D` with custom weights
+- **Guardrails** — exclude bots, internal users, or specific paths
+- **Kill-switch** — a single env var that forces everyone to `A`
+
+A zero-dependency TypeScript version of the assignment function (deterministic variant picker) lives as a gist: [A/B testing helper](https://gist.github.com/Hassan-Naeem-code/de0c91ce7ec80fe146da1bc05db684dd).
+
+## License
+
+MIT
